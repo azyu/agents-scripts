@@ -5,20 +5,33 @@ AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCod
 ## 구조
 
 ```
-agents/                 # 서브에이전트 정의 (11개)
-skills/                 # 스킬 패키지 (11개)
-├── agents-md-creator/  #   AGENTS.md 생성기
-├── frontend-design/    #   프론트엔드 UI 생성
-├── last30days/         #   최근 30일 리서치
-├── plugins-creator/    #   Claude Code 플러그인 생성
-├── security-review/    #   보안 체크리스트
-├── skill-creator/      #   스킬 생성/패키징
-├── tdd-workflow/       #   TDD 워크플로우
+AGENTS.md               # 에이전트 진입점 — rules/ 참조
+rules/                   # 공통 가이드라인 (모든 에이전트 적용)
+├── karpathy-guidelines.md
+└── custom-guidelines.md
+agents/                  # 서브에이전트 정의 (11개)
+skills/                  # 스킬 패키지 (11개)
+├── agents-md-creator/
+├── frontend-design/
+├── last30days/
+├── plugins-creator/
+├── security-review/
+├── skill-creator/
+├── tdd-workflow/
 ├── backend-patterns.md
 ├── clickhouse-io.md
 ├── coding-standards.md
 └── frontend-patterns.md
 ```
+
+## Rules
+
+`AGENTS.md`가 참조하는 공통 가이드라인. 모든 AI 에이전트에 적용.
+
+| Rule | 설명 |
+|------|------|
+| `karpathy-guidelines` | 가정 표면화, 최소 코드, 수술적 변경, 목표 기반 실행 |
+| `custom-guidelines` | 서브에이전트 병렬 실행, 버그 수정 시 TDD (RED→GREEN) |
 
 ## Agents
 
