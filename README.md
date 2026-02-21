@@ -1,0 +1,84 @@
+# agents-scripts
+
+AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCode, Cursor 등에서 사용.
+
+## 구조
+
+```
+~/.agents/
+├── agents/            # 서브에이전트 정의 (11개)
+├── skills/            # 스킬 패키지 (11개)
+├── _skills/           # 실험/비공개 스킬 (gitignore)
+├── AGENTS.md          # openskills 자동생성 매니페스트 (gitignore)
+└── .gitignore
+```
+
+## Agents
+
+특정 역할에 특화된 서브에이전트. 메인 에이전트가 작업을 위임할 때 사용.
+
+| Agent | 역할 |
+|-------|------|
+| `architect` | 시스템 설계, 확장성, 기술 의사결정 |
+| `planner` | 복잡한 기능/리팩토링 계획 수립 |
+| `code-reviewer` | 코드 품질, 보안, 유지보수성 리뷰 |
+| `code-simplifier` | 코드 간소화 및 가독성 개선 |
+| `build-error-resolver` | 빌드/타입 에러 해결 (최소 diff) |
+| `tdd-guide` | TDD 워크플로우 (테스트 먼저, 80%+ 커버리지) |
+| `e2e-runner` | Playwright E2E 테스트 생성/실행 |
+| `security-reviewer` | 보안 취약점 탐지 (OWASP Top 10) |
+| `database-reviewer` | PostgreSQL 쿼리 최적화, 스키마 설계 |
+| `refactor-cleaner` | 데드 코드 제거, 중복 통합 |
+| `doc-updater` | 문서/코드맵 자동 업데이트 |
+
+## Skills
+
+에이전트에 로드하여 전문 지식을 부여하는 스킬 패키지.
+
+### 디렉토리형 스킬 (references/scripts 포함)
+
+| Skill | 설명 |
+|-------|------|
+| `agents-md-creator` | AGENTS.md 생성/업데이트 — 10+ 탑 레포 분석 기반 |
+| `frontend-design` | 프로덕션급 프론트엔드 UI 생성 |
+| `last30days` | 최근 30일 Reddit+X+Web 리서치 → 프롬프트 생성 |
+| `plugins-creator` | Claude Code 플러그인 생성 가이드 |
+| `security-review` | 인증, 입력 처리, 시크릿, API 보안 체크리스트 |
+| `skill-creator` | 새 스킬 생성/패키징 가이드 |
+| `tdd-workflow` | TDD 워크플로우 (Jest/Vitest/Playwright 패턴) |
+
+### 단일 파일 스킬
+
+| Skill | 설명 |
+|-------|------|
+| `coding-standards` | TypeScript/JavaScript/React/Node.js 코딩 표준 |
+| `frontend-patterns` | React, Next.js, 상태 관리, 성능 최적화 패턴 |
+| `backend-patterns` | Node.js/Express/Next.js API 설계, DB 최적화 |
+| `clickhouse-io` | ClickHouse 쿼리 최적화, 분석 데이터 엔지니어링 |
+
+## 사용법
+
+### OpenCode / Claude Code에서 스킬 로드
+
+```bash
+npx openskills read agents-md-creator
+npx openskills read skill-one,skill-two
+```
+
+### 다른 머신에 동기화
+
+```bash
+git clone git@github.com:azyu/agents-scripts.git ~/.agents
+```
+
+> `AGENTS.md`는 `npx openskills`가 `skills/` 기반으로 자동생성하므로 git에서 제외.
+
+## .gitignore 정책
+
+| 제외 대상 | 이유 |
+|-----------|------|
+| `AGENTS.md` | openskills 자동생성 |
+| `_skills/` | 실험/비공개 스킬 |
+| `state/`, `repos/` | 런타임 데이터 |
+| `*.skill` | 빌드 산출물 |
+| `__pycache__/`, `*.pyc` | Python 캐시 |
