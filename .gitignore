@@ -1,6 +1,7 @@
 .DS_Store
 state/
 repos/
+_skills/
 __pycache__/
 *.pyc
 *.skill
