@@ -5,12 +5,19 @@ AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCod
 ## 구조
 
 ```
-~/.agents/
-├── agents/            # 서브에이전트 정의 (11개)
-├── skills/            # 스킬 패키지 (11개)
-├── _skills/           # 실험/비공개 스킬 (gitignore)
-├── AGENTS.md          # openskills 자동생성 매니페스트 (gitignore)
-└── .gitignore
+agents/                 # 서브에이전트 정의 (11개)
+skills/                 # 스킬 패키지 (11개)
+├── agents-md-creator/  #   AGENTS.md 생성기
+├── frontend-design/    #   프론트엔드 UI 생성
+├── last30days/         #   최근 30일 리서치
+├── plugins-creator/    #   Claude Code 플러그인 생성
+├── security-review/    #   보안 체크리스트
+├── skill-creator/      #   스킬 생성/패키징
+├── tdd-workflow/       #   TDD 워크플로우
+├── backend-patterns.md
+├── clickhouse-io.md
+├── coding-standards.md
+└── frontend-patterns.md
 ```
 
 ## Agents
@@ -35,30 +42,23 @@ AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCod
 
 에이전트에 로드하여 전문 지식을 부여하는 스킬 패키지.
 
-### 디렉토리형 스킬 (references/scripts 포함)
-
-| Skill | 설명 |
-|-------|------|
-| `agents-md-creator` | AGENTS.md 생성/업데이트 — 10+ 탑 레포 분석 기반 |
-| `frontend-design` | 프로덕션급 프론트엔드 UI 생성 |
-| `last30days` | 최근 30일 Reddit+X+Web 리서치 → 프롬프트 생성 |
-| `plugins-creator` | Claude Code 플러그인 생성 가이드 |
-| `security-review` | 인증, 입력 처리, 시크릿, API 보안 체크리스트 |
-| `skill-creator` | 새 스킬 생성/패키징 가이드 |
-| `tdd-workflow` | TDD 워크플로우 (Jest/Vitest/Playwright 패턴) |
-
-### 단일 파일 스킬
-
-| Skill | 설명 |
-|-------|------|
-| `coding-standards` | TypeScript/JavaScript/React/Node.js 코딩 표준 |
-| `frontend-patterns` | React, Next.js, 상태 관리, 성능 최적화 패턴 |
-| `backend-patterns` | Node.js/Express/Next.js API 설계, DB 최적화 |
-| `clickhouse-io` | ClickHouse 쿼리 최적화, 분석 데이터 엔지니어링 |
+| Skill | 타입 | 설명 |
+|-------|------|------|
+| `agents-md-creator` | 디렉토리 | AGENTS.md 생성/업데이트 — 10+ 탑 레포 분석 기반 |
+| `frontend-design` | 디렉토리 | 프로덕션급 프론트엔드 UI 생성 |
+| `last30days` | 디렉토리 | 최근 30일 Reddit+X+Web 리서치 → 프롬프트 생성 |
+| `plugins-creator` | 디렉토리 | Claude Code 플러그인 생성 가이드 |
+| `security-review` | 디렉토리 | 인증, 입력 처리, 시크릿, API 보안 체크리스트 |
+| `skill-creator` | 디렉토리 | 새 스킬 생성/패키징 가이드 |
+| `tdd-workflow` | 디렉토리 | TDD 워크플로우 (Jest/Vitest/Playwright 패턴) |
+| `coding-standards` | 단일 파일 | TypeScript/JavaScript/React/Node.js 코딩 표준 |
+| `frontend-patterns` | 단일 파일 | React, Next.js, 상태 관리, 성능 최적화 패턴 |
+| `backend-patterns` | 단일 파일 | Node.js/Express/Next.js API 설계, DB 최적화 |
+| `clickhouse-io` | 단일 파일 | ClickHouse 쿼리 최적화, 분석 데이터 엔지니어링 |
 
 ## 사용법
 
-### OpenCode / Claude Code에서 스킬 로드
+### 스킬 로드 (OpenCode / Claude Code)
 
 ```bash
 npx openskills read agents-md-creator
@@ -70,15 +70,3 @@ npx openskills read skill-one,skill-two
 ```bash
 git clone git@github.com:azyu/agents-scripts.git ~/.agents
 ```
-
-> `AGENTS.md`는 `npx openskills`가 `skills/` 기반으로 자동생성하므로 git에서 제외.
-
-## .gitignore 정책
-
-| 제외 대상 | 이유 |
-|-----------|------|
-| `AGENTS.md` | openskills 자동생성 |
-| `_skills/` | 실험/비공개 스킬 |
-| `state/`, `repos/` | 런타임 데이터 |
-| `*.skill` | 빌드 산출물 |
-| `__pycache__/`, `*.pyc` | Python 캐시 |
