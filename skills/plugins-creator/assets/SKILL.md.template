@@ -1,0 +1,45 @@
+---
+name: {{skill-name}}
+description: {{skill-description}}
+---
+
+# {{Skill Title}}
+
+## Overview
+
+Describe what this skill helps Claude accomplish.
+
+## When to Use
+
+- Situation 1
+- Situation 2
+- Situation 3
+
+## Workflow
+
+### Step 1: {{First Step}}
+
+Instructions for step 1.
+
+### Step 2: {{Second Step}}
+
+Instructions for step 2.
+
+### Step 3: {{Third Step}}
+
+Instructions for step 3.
+
+## Examples
+
+### Example 1: {{Example Title}}
+
+```
+Example content here
+```
+
+## Resources
+
+Reference bundled files in:
+- `scripts/` - Executable automation
+- `references/` - Detailed documentation
+- `assets/` - Templates and files
