@@ -2,6 +2,6 @@
 
 Read these files first:
 
-- rules/karpathy-guidelines.md
-- rules/custom-guidelines.md
-- rules/tools.md
+- ~/.agents/rules/karpathy-guidelines.md
+- ~/.agents/rules/custom-guidelines.md
+- ~/.agents/rules/tools.md
