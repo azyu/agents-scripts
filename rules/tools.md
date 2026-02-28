@@ -3,8 +3,14 @@
 the full tool catalog if it exists.
 
 ## gh
-- GitHub CLI for PRs/CI/releases. Given issue/PR URL (or /pull/5): use gh, not web search.
-- Examples: gh issue view <url> --comments -R owner/repo, gh pr view <url> --comments --files -R owner/repo.
+- GitHub CLI for PRs/issues/CI/releases. Given issue/PR URL: use gh, not web search.
+- Examples: gh issue view <url> --comments, gh pr view <url> --comments --files, gh pr list, gh pr create, gh run list, gh api <endpoint>.
+- Uses -R owner/repo flag (or defaults from current repo context).
+
+## bb
+- Bitbucket Cloud CLI for PRs/issues/pipelines.
+- Examples: bb pr list, bb issue list, bb pr create, bb pipeline list, bb api <endpoint>.
+- Uses --workspace and --repo flags (or defaults from current repo context).
 
 ## tmux
 - Use only when you need persistence/interaction (debugger/server).
