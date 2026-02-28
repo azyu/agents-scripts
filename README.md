@@ -8,7 +8,8 @@ AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCod
 AGENTS.md               # 에이전트 진입점 — rules/ 참조
 rules/                   # 공통 가이드라인 (모든 에이전트 적용)
 ├── karpathy-guidelines.md
-└── custom-guidelines.md
+├── custom-guidelines.md
+└── tools.md
 agents/                  # 서브에이전트 정의 (11개)
 skills/                  # 스킬 패키지 (11개)
 ├── agents-md-creator/
@@ -32,6 +33,7 @@ skills/                  # 스킬 패키지 (11개)
 |------|------|
 | `karpathy-guidelines` | 가정 표면화, 최소 코드, 수술적 변경, 목표 기반 실행 |
 | `custom-guidelines` | 서브에이전트 병렬 실행, 버그 수정 시 TDD (RED→GREEN) |
+| `tools` | gh CLI, tmux 등 도구 사용 가이드 |
 
 ## Agents
 
