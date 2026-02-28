@@ -11,6 +11,7 @@ declare -a TARGETS=(
   "agents:agents"
   "skills:skills"
   "rules:rules"
+  "scripts:scripts"
 )
 
 log()  { printf "\033[32m✓\033[0m %s\n" "$1"; }
@@ -67,5 +68,11 @@ for entry in "${TARGETS[@]}"; do
   log "Linked: $dst_name → $src"
 done
 
+# Make scripts executable
+if [ -d "$CLAUDE_DIR/scripts" ]; then
+  find "$CLAUDE_DIR/scripts" -name '*.sh' -exec chmod +x {} +
+  log "Made scripts/*.sh executable"
+fi
+
 echo ""
-echo "Done. Verify with: ls -la ~/.claude/{CLAUDE.md,agents,skills,rules}"
+echo "Done. Verify with: ls -la ~/.claude/{CLAUDE.md,agents,skills,rules,scripts}"

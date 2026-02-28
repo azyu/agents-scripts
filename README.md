@@ -12,10 +12,11 @@ rules/                   # 공통 가이드라인 (모든 에이전트 적용)
 ├── custom-guidelines.md
 └── tools.md
 agents/                  # 서브에이전트 정의 (11개)
-skills/                  # 스킬 패키지 (11개)
+skills/                  # 스킬 패키지 (12개)
 ├── agents-md-creator/
 ├── frontend-design/
 ├── last30days/
+├── orchestrate/         # tmux CLI 워커 오케스트레이션
 ├── plugins-creator/
 ├── security-review/
 ├── skill-creator/
@@ -24,6 +25,13 @@ skills/                  # 스킬 패키지 (11개)
 ├── clickhouse-io.md
 ├── coding-standards.md
 └── frontend-patterns.md
+scripts/                 # 실행 스크립트
+├── orchestrate-lib.sh   # 공통 함수 (로깅, JSON, 타임아웃)
+├── orchestrate-worker.sh # 워커 래퍼 (CLI 실행 → done.json)
+├── orchestrate-start.sh  # 팀 생성, 워커 스폰
+├── orchestrate-status.sh # 상태 확인
+├── orchestrate-collect.sh # 결과 수집, 정리
+└── tests/               # stub 기반 테스트
 ```
 
 ## Rules
@@ -67,6 +75,7 @@ skills/                  # 스킬 패키지 (11개)
 | `security-review` | 디렉토리 | 인증, 입력 처리, 시크릿, API 보안 체크리스트 |
 | `skill-creator` | 디렉토리 | 새 스킬 생성/패키징 가이드 |
 | `tdd-workflow` | 디렉토리 | TDD 워크플로우 (Jest/Vitest/Playwright 패턴) |
+| `orchestrate` | 디렉토리 | Codex/Gemini CLI tmux 워커 오케스트레이션 |
 | `coding-standards` | 단일 파일 | TypeScript/JavaScript/React/Node.js 코딩 표준 |
 | `frontend-patterns` | 단일 파일 | React, Next.js, 상태 관리, 성능 최적화 패턴 |
 | `backend-patterns` | 단일 파일 | Node.js/Express/Next.js API 설계, DB 최적화 |
@@ -87,5 +96,21 @@ git clone git@github.com:azyu/agents-scripts.git ~/.agents
 | `~/.agents/agents/` | `~/.claude/agents/` |
 | `~/.agents/skills/` | `~/.claude/skills/` |
 | `~/.agents/rules/` | `~/.claude/rules/` |
+| `~/.agents/scripts/` | `~/.claude/scripts/` |
 
 기존 파일은 `~/.claude/backups/`에 자동 백업됩니다.
+
+## Scripts
+
+### orchestrate — 멀티 CLI 워커 오케스트레이션
+
+Claude Code가 오케스트레이터로서 Codex CLI와 Gemini CLI에 작업을 위임하는 tmux 기반 멀티모델 시스템.
+
+```bash
+# 1. 태스크 정의 → 2. 워커 스폰 → 3. 폴링 → 4. 수집
+orchestrate-start.sh --team myteam --tasks tasks.json --cwd /path/to/project
+orchestrate-status.sh --team myteam --json
+orchestrate-collect.sh --team myteam --json
+```
+
+라우팅: 아키텍처/백엔드 → Codex CLI, 프론트엔드/UI → Gemini CLI.

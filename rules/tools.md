@@ -15,3 +15,11 @@ the full tool catalog if it exists.
 ## tmux
 - Use only when you need persistence/interaction (debugger/server).
 - Quick refs: `tmux new -d -s codex-shell`, `tmux attach -t codex-shell`, `tmux list-sessions`, `tmux kill-session -t codex-shell`.
+
+## orchestrate (multi-CLI worker)
+- Delegates tasks to Codex CLI and Gemini CLI via tmux workers.
+- Scripts: `~/.agents/scripts/orchestrate-{start,status,collect}.sh`
+- Routing: architecture/backend → codex, frontend/UI → gemini.
+- Workflow: write tasks.json → `orchestrate-start.sh` → poll `orchestrate-status.sh` → `orchestrate-collect.sh`.
+- State lives in `<project>/.orc/` (auto-gitignored).
+- Use the `/orchestrate` skill for full protocol details.
