@@ -89,12 +89,3 @@ git clone git@github.com:azyu/agents-scripts.git ~/.agents
 | `~/.agents/rules/` | `~/.claude/rules/` |
 
 기존 파일은 `~/.claude/backups/`에 자동 백업됩니다.
-
-## 사용법
-
-### 스킬 로드 (OpenCode / Claude Code)
-
-```bash
-npx openskills read agents-md-creator
-npx openskills read skill-one,skill-two
-```
