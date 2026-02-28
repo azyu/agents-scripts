@@ -5,6 +5,7 @@ AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCod
 ## 구조
 
 ```
+install.sh               # ~/.claude symlink 설치 스크립트
 AGENTS.md               # 에이전트 진입점 — rules/ 참조
 rules/                   # 공통 가이드라인 (모든 에이전트 적용)
 ├── karpathy-guidelines.md
@@ -71,6 +72,24 @@ skills/                  # 스킬 패키지 (11개)
 | `backend-patterns` | 단일 파일 | Node.js/Express/Next.js API 설계, DB 최적화 |
 | `clickhouse-io` | 단일 파일 | ClickHouse 쿼리 최적화, 분석 데이터 엔지니어링 |
 
+## 설치
+
+```bash
+git clone git@github.com:azyu/agents-scripts.git ~/.agents
+~/.agents/install.sh
+```
+
+`install.sh`는 `~/.claude`에 symlink를 생성합니다:
+
+| Source | Destination |
+|--------|------------|
+| `~/.agents/AGENTS.md` | `~/.claude/CLAUDE.md` |
+| `~/.agents/agents/` | `~/.claude/agents/` |
+| `~/.agents/skills/` | `~/.claude/skills/` |
+| `~/.agents/rules/` | `~/.claude/rules/` |
+
+기존 파일은 `~/.claude/backups/`에 자동 백업됩니다.
+
 ## 사용법
 
 ### 스킬 로드 (OpenCode / Claude Code)
@@ -78,10 +97,4 @@ skills/                  # 스킬 패키지 (11개)
 ```bash
 npx openskills read agents-md-creator
 npx openskills read skill-one,skill-two
-```
-
-### 다른 머신에 동기화
-
-```bash
-git clone git@github.com:azyu/agents-scripts.git ~/.agents
 ```
