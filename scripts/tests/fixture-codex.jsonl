@@ -1,0 +1,4 @@
+{"type":"thread.started","threadId":"thread_abc123"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Hello from Codex! The task has been completed successfully."}]}}
+{"type":"turn.completed"}

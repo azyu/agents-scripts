@@ -1,0 +1,8 @@
+{
+  "response": "Hello from Gemini! The task has been completed successfully.",
+  "stats": {
+    "total_input_tokens": 150,
+    "total_output_tokens": 42
+  },
+  "error": null
+}
