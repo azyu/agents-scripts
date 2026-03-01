@@ -6,17 +6,19 @@ Usage:
     python init_plugin.py <plugin-name> [options]
 
 Options:
-    --skills    Include skills directory
-    --agents    Include agents directory
-    --hooks     Include hooks directory
-    --mcp       Include MCP server configuration
-    --all       Include all component types
-    --output    Output directory (default: current directory)
+    --skills      Include skills directory
+    --commands    Include commands directory
+    --agents      Include agents directory
+    --hooks       Include hooks directory
+    --mcp         Include MCP server configuration
+    --all         Include all component types
+    --output      Output directory (default: current directory)
 """
 
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -56,6 +58,22 @@ Provide concrete examples.
 """
 
 
+def create_command_template(plugin_name: str, command_name: str = "run") -> str:
+    """Create a basic command markdown template."""
+    return f"""---
+name: {command_name}
+description: What this command does
+allowed-tools: Bash(${{CLAUDE_PLUGIN_ROOT}}/scripts/*:*)
+---
+
+"$ARGUMENTS"
+
+## Instructions
+
+Describe what Claude should do when this command is invoked.
+"""
+
+
 def create_agent_template(agent_name: str) -> str:
     """Create a basic agent template."""
     return f"""---
@@ -88,10 +106,20 @@ Define the agent's role and expertise.
 
 
 def create_hook_template() -> dict:
-    """Create a basic hooks configuration template."""
+    """Create a hooks configuration template with ${CLAUDE_PLUGIN_ROOT} example."""
     return {
         "hooks": {
-            "PreToolUse": [],
+            "PreToolUse": [
+                {
+                    "matcher": "Bash",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-bash.sh"
+                        }
+                    ]
+                }
+            ],
             "PostToolUse": [],
             "Stop": []
         }
@@ -109,15 +137,20 @@ def init_plugin(
     plugin_name: str,
     output_dir: Path,
     include_skills: bool = False,
+    include_commands: bool = False,
     include_agents: bool = False,
     include_hooks: bool = False,
     include_mcp: bool = False
 ) -> Path:
     """Initialize a new plugin with the specified components."""
 
-    # Validate plugin name
-    if not plugin_name.replace('-', '').replace('_', '').isalnum():
-        raise ValueError(f"Invalid plugin name: {plugin_name}. Use alphanumeric characters, hyphens, or underscores.")
+    # Validate plugin name (must be lowercase alphanumeric with hyphens/underscores)
+    if not re.match(r'^[a-z0-9][a-z0-9\-_]*$', plugin_name):
+        raise ValueError(
+            f"Invalid plugin name: '{plugin_name}'. "
+            "Use lowercase alphanumeric characters, hyphens, or underscores. "
+            "Must start with a letter or digit."
+        )
 
     plugin_path = output_dir / plugin_name
 
@@ -141,6 +174,13 @@ def init_plugin(
         skill_content = create_skill_template(f"{plugin_name}-skill")
         with open(skills_dir / "SKILL.md", 'w') as f:
             f.write(skill_content)
+
+    if include_commands:
+        commands_dir = plugin_path / "commands"
+        commands_dir.mkdir()
+        command_content = create_command_template(plugin_name)
+        with open(commands_dir / "run.md", 'w') as f:
+            f.write(command_content)
 
     if include_agents:
         agents_dir = plugin_path / "agents"
@@ -195,8 +235,9 @@ Examples:
         """
     )
 
-    parser.add_argument("name", help="Plugin name (use hyphens for multi-word names)")
+    parser.add_argument("name", help="Plugin name (lowercase, hyphens for multi-word names)")
     parser.add_argument("--skills", action="store_true", help="Include skills directory")
+    parser.add_argument("--commands", action="store_true", help="Include commands directory")
     parser.add_argument("--agents", action="store_true", help="Include agents directory")
     parser.add_argument("--hooks", action="store_true", help="Include hooks directory")
     parser.add_argument("--mcp", action="store_true", help="Include MCP server configuration")
@@ -213,6 +254,7 @@ Examples:
             plugin_name=args.name,
             output_dir=args.output,
             include_skills=include_all or args.skills,
+            include_commands=include_all or args.commands,
             include_agents=include_all or args.agents,
             include_hooks=include_all or args.hooks,
             include_mcp=include_all or args.mcp

@@ -77,6 +77,36 @@ description: |
 - Use scripts/ for deterministic operations
 - Description determines when skill triggers
 
+### Commands
+
+Commands are slash-command definitions that users invoke as `/plugin:command-name`.
+
+**Location:** `<plugin>/commands/<command-name>.md`
+
+**Frontmatter:**
+```yaml
+---
+name: command-name
+description: What this command does
+allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/run.sh:*)
+---
+```
+
+**Body:**
+```markdown
+"$ARGUMENTS"
+
+## Instructions
+
+What Claude should do when this command is invoked.
+```
+
+**Key Details:**
+- `$ARGUMENTS`: Variable replaced with user-provided arguments after the slash command
+- `${CLAUDE_PLUGIN_ROOT}`: Runtime variable resolved to the plugin's install path; use in `allowed-tools` to reference scripts within the plugin
+- `allowed-tools`: Restricts which tools the command can use; supports glob patterns
+- Command names must be lowercase with hyphens
+
 ### Agents
 
 Agents are specialized domain experts with specific tool access.
@@ -121,7 +151,9 @@ model: sonnet  # sonnet (default), opus, haiku
 
 Hooks execute commands at specific points in Claude's workflow.
 
-**Location:** `<plugin>/hooks/<hook-name>.json`
+**Location:** `<plugin>/hooks/hooks.json`
+
+> **IMPORTANT:** The file MUST be named `hooks.json`. The runtime auto-loads only this filename from the plugin's `hooks/` directory.
 
 **Hook Types:**
 
@@ -129,7 +161,15 @@ Hooks execute commands at specific points in Claude's workflow.
 |------|------|----------|
 | `PreToolUse` | Before tool executes | Validation, modification, blocking |
 | `PostToolUse` | After tool executes | Formatting, logging, verification |
-| `Stop` | Session ends | Cleanup, final checks |
+| `Stop` | Session ends normally | Cleanup, final checks |
+| `UserPromptSubmit` | User submits prompt | Context enrichment |
+| `SessionStart` | Session starts | Initialization, state loading |
+| `SessionEnd` | Session ends | State saving |
+| `PermissionRequest` | Permission prompt shown | Custom approval (e.g., ExitPlanMode) |
+| `Notification` | Notification event | Notification routing |
+| `SubagentStart` | Subagent created | Context injection |
+| `PostToolUseFailure` | Tool execution fails | Error logging |
+| `PreCompact` | Before context compaction | State preservation |
 
 **Schema:**
 ```json
@@ -137,11 +177,11 @@ Hooks execute commands at specific points in Claude's workflow.
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "ToolName",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "shell command to execute"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-bash.sh"
           }
         ]
       }
@@ -152,9 +192,14 @@ Hooks execute commands at specific points in Claude's workflow.
 }
 ```
 
-**Matcher Options:**
-- Exact tool name: `"Bash"`, `"Write"`, `"Edit"`
-- Glob pattern: `"*"` (all tools)
+**Matcher Patterns:**
+
+| Pattern | Description | Example |
+|---------|-------------|---------|
+| (omitted) | Match ALL events of this type | hookify's catch-all pattern |
+| Exact name | Match specific tool/event | `"Bash"`, `"ExitPlanMode"` |
+| Pipe-delimited | Match any of listed names | `"startup\|resume\|clear\|compact"` |
+| Glob | Wildcard matching | `"*"` |
 
 **Hook Actions:**
 ```json
@@ -163,6 +208,21 @@ Hooks execute commands at specific points in Claude's workflow.
   "command": "echo 'Hook executed'",
   "timeout": 5000
 }
+```
+
+### `${CLAUDE_PLUGIN_ROOT}` Environment Variable
+
+The runtime injects `${CLAUDE_PLUGIN_ROOT}` with the plugin's actual install path. This is critical for portability.
+
+**Rules:**
+- ALWAYS use `${CLAUDE_PLUGIN_ROOT}` in hook commands and allowed-tools
+- NEVER use absolute paths (`/Users/...`) or relative paths (`./hooks/...`)
+- Works in: `hooks.json` commands, command frontmatter `allowed-tools`
+
+**Examples:**
+```json
+"command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre_tool.py"
+"command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/validate.py"
 ```
 
 ### MCP Servers
@@ -232,8 +292,27 @@ claude --plugin-dir ./my-plugin
 claude --plugin-dir ./plugin-a --plugin-dir ./plugin-b
 ```
 
+### Installation Flow (Marketplace)
+
+```
+marketplace.json registration
+→ claude plugin install github:owner/repo/plugin-name
+→ ~/.claude/plugins/cache/{marketplace}/{plugin}/{version}/ (files copied)
+→ installed_plugins.json (plugin registered)
+→ settings.json enabledPlugins (plugin activated)
+→ Runtime auto-loads hooks/hooks.json with ${CLAUDE_PLUGIN_ROOT} resolved
+```
+
 ### From Installed Location
 Place in `~/.claude/plugins/` for automatic loading.
+
+## Hook Registration Patterns
+
+| Pattern | Example | How hooks are registered |
+|---------|---------|------------------------|
+| Plugin (marketplace) | hookify, superpowers | `hooks/hooks.json` + `${CLAUDE_PLUGIN_ROOT}` → runtime auto-loads |
+| Standalone installer | peon-ping | Installer script writes absolute paths into `settings.json` |
+| Manual | obsidian-plan-sync | User manually adds entries to `settings.json` |
 
 ## Debugging
 
@@ -254,12 +333,34 @@ Place in `~/.claude/plugins/` for automatic loading.
 3. Ensure model is valid (sonnet/opus/haiku)
 
 ### Hooks Not Executing
-1. Validate JSON syntax
-2. Check matcher matches tool name
-3. Verify command exists and is executable
-4. Check command timeout
+1. Verify file is named `hooks.json` (not any other name)
+2. Validate JSON syntax
+3. Check matcher matches tool name
+4. Verify command exists and is executable
+5. Check command timeout
+6. Ensure `${CLAUDE_PLUGIN_ROOT}` is used (not absolute paths)
 
 ## Marketplace Deployment
+
+### marketplace.json Schema
+
+The `marketplace.json` in the repo root registers plugins for installation.
+
+```json
+{
+  "name": "marketplace-name",
+  "owner": {
+    "name": "github-username"
+  },
+  "plugins": [
+    {
+      "name": "plugin-name",
+      "source": "./plugin-dir",
+      "description": "What this plugin does"
+    }
+  ]
+}
+```
 
 ### Preparation Checklist
 - [ ] All components validated
@@ -268,15 +369,19 @@ Place in `~/.claude/plugins/` for automatic loading.
 - [ ] Version follows semver
 - [ ] Keywords for discovery
 - [ ] Tested with `--plugin-dir`
+- [ ] marketplace.json registered
+- [ ] hooks.json uses `${CLAUDE_PLUGIN_ROOT}` (not absolute paths)
 
 ### Package Structure
 ```
 my-plugin-1.0.0/
 ├── .claude-plugin/
 │   └── plugin.json
+├── commands/
 ├── skills/
 ├── agents/
 ├── hooks/
+│   └── hooks.json
 ├── CLAUDE.md
 ├── README.md
 └── LICENSE

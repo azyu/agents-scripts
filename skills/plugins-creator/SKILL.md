@@ -1,6 +1,6 @@
 ---
 name: plugins-creator
-description: Guide for creating Claude Code plugins with skills, agents, hooks, and MCP servers. Use when users want to create a new plugin, convert standalone config to plugin, or add components to existing plugins.
+description: Guide for creating Claude Code plugins with skills, commands, agents, hooks, and MCP servers. Use when users want to create a new plugin, convert standalone config to plugin, or add components to existing plugins.
 ---
 
 # Creating Claude Code Plugins
@@ -24,6 +24,8 @@ description: Guide for creating Claude Code plugins with skills, agents, hooks, 
 my-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Required: manifest
+├── commands/                 # Optional: slash commands (/plugin:command)
+│   └── command-name.md
 ├── skills/                   # Optional: skill definitions
 │   └── my-skill/
 │       ├── SKILL.md
@@ -31,10 +33,12 @@ my-plugin/
 ├── agents/                   # Optional: agent definitions
 │   └── my-agent.md
 ├── hooks/                    # Optional: hook definitions
-│   └── my-hook.json
+│   └── hooks.json           # MUST be hooks.json (runtime auto-loads this name)
 ├── mcp/                      # Optional: MCP server configs
 │   └── servers.json
-└── CLAUDE.md                 # Optional: plugin-level instructions
+├── CLAUDE.md                 # Optional: plugin-level instructions (auto-injected)
+├── README.md
+└── LICENSE
 ```
 
 ## Creation Workflow
@@ -46,6 +50,7 @@ python ~/.claude/skills/plugins-creator/scripts/init_plugin.py <plugin-name> [op
 
 # Options:
 #   --skills      Include skills directory
+#   --commands    Include commands directory
 #   --agents      Include agents directory
 #   --hooks       Include hooks directory
 #   --mcp         Include MCP configuration
@@ -76,6 +81,12 @@ mkdir -p my-plugin/skills/my-skill
 # Create my-plugin/skills/my-skill/SKILL.md with frontmatter
 ```
 
+**Add a Command:**
+```bash
+mkdir -p my-plugin/commands
+# Create my-plugin/commands/my-command.md with frontmatter
+```
+
 **Add an Agent:**
 ```bash
 mkdir -p my-plugin/agents
@@ -85,7 +96,7 @@ mkdir -p my-plugin/agents
 **Add Hooks:**
 ```bash
 mkdir -p my-plugin/hooks
-# Create my-plugin/hooks/my-hook.json
+# Create my-plugin/hooks/hooks.json (MUST be this filename)
 ```
 
 ### Step 4: Validate Plugin
@@ -117,6 +128,21 @@ description: What it does. When to use it.
 # Instructions here
 ```
 
+### Commands (command-name.md)
+
+```yaml
+---
+name: command-name
+description: What this command does
+allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/run.sh:*)
+---
+
+"$ARGUMENTS"
+
+## Instructions
+What Claude should do.
+```
+
 ### Agents (agent-name.md)
 
 ```yaml
@@ -133,7 +159,7 @@ model: sonnet  # or opus, haiku
 # Agent instructions here
 ```
 
-### Hooks (hook-name.json)
+### Hooks (hooks.json)
 
 ```json
 {
@@ -144,7 +170,7 @@ model: sonnet  # or opus, haiku
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Pre-bash hook'"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-bash.sh"
           }
         ]
       }
@@ -153,14 +179,40 @@ model: sonnet  # or opus, haiku
 }
 ```
 
+> **Note:** Always use `${CLAUDE_PLUGIN_ROOT}` for paths in hook commands. Never use absolute paths.
+
 ## Migration: Standalone to Plugin
 
 1. Create plugin directory with `init_plugin.py`
 2. Move files to appropriate directories:
    - `~/.claude/skills/my-skill/` → `my-plugin/skills/my-skill/`
    - `~/.claude/agents/my-agent.md` → `my-plugin/agents/my-agent.md`
-3. Update any hardcoded paths in scripts
+3. Update any hardcoded paths to use `${CLAUDE_PLUGIN_ROOT}`
 4. Validate and test
+
+## Hook Registration Patterns
+
+| Pattern | Example | How hooks are registered |
+|---------|---------|------------------------|
+| Plugin (marketplace) | hookify, superpowers | `hooks/hooks.json` + `${CLAUDE_PLUGIN_ROOT}` → runtime auto-loads |
+| Standalone installer | peon-ping | Installer writes absolute paths into `settings.json` |
+| Manual | obsidian-plan-sync | User manually edits `settings.json` |
+
+## Marketplace Registration
+
+To publish a plugin, add a `marketplace.json` at the repo root:
+
+```json
+{
+  "name": "marketplace-name",
+  "owner": { "name": "github-username" },
+  "plugins": [
+    { "name": "plugin-name", "source": "./plugin-dir", "description": "..." }
+  ]
+}
+```
+
+**Install flow:** `claude plugin install github:owner/repo/plugin-name` → cache → `installed_plugins.json` → `enabledPlugins`
 
 ## Resources
 

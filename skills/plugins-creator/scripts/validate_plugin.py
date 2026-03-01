@@ -10,7 +10,9 @@ Checks:
     - Directory structure is correct
     - Skill files have valid frontmatter
     - Agent files have valid frontmatter
-    - Hook files are valid JSON
+    - Command files have valid frontmatter
+    - Hook files are valid JSON with correct types
+    - ${CLAUDE_PLUGIN_ROOT} usage in hooks
 """
 
 import argparse
@@ -50,10 +52,16 @@ def validate_manifest(plugin_path: Path) -> list[ValidationError]:
         return errors
 
     # Required fields
-    required_fields = ["name", "description", "version"]
+    required_fields = ["name", "description"]
     for field in required_fields:
         if field not in manifest:
             errors.append(ValidationError("error", f"Missing required field: {field}", manifest_path))
+
+    # Recommended fields
+    if "version" not in manifest:
+        errors.append(ValidationError("warning",
+            "Missing 'version' field. Recommended for marketplace plugins.",
+            manifest_path))
 
     # Validate name format
     if "name" in manifest:
@@ -180,9 +188,39 @@ def validate_agent(agent_path: Path) -> list[ValidationError]:
     if "model" not in frontmatter:
         errors.append(ValidationError("warning",
             "Missing 'model' specification. Will use default.", agent_path))
-    elif frontmatter["model"] not in ["sonnet", "opus", "haiku"]:
+    elif frontmatter["model"] not in ["sonnet", "opus", "haiku", "inherit"]:
         errors.append(ValidationError("warning",
             f"Unknown model '{frontmatter['model']}'. Use: sonnet, opus, haiku", agent_path))
+
+    return errors
+
+
+def validate_command(command_path: Path) -> list[ValidationError]:
+    """Validate a command markdown file."""
+    errors = []
+
+    content = command_path.read_text()
+
+    # Check frontmatter
+    frontmatter = parse_yaml_frontmatter(content)
+    if frontmatter is None:
+        errors.append(ValidationError("error", "Missing or invalid YAML frontmatter", command_path))
+        return errors
+
+    # Required frontmatter fields
+    if "name" not in frontmatter:
+        errors.append(ValidationError("warning",
+            "Missing 'name' in frontmatter. Filename will be used as command name.",
+            command_path))
+
+    if "description" not in frontmatter:
+        errors.append(ValidationError("error", "Missing 'description' in frontmatter", command_path))
+
+    # Check for $ARGUMENTS usage
+    if "$ARGUMENTS" not in content:
+        errors.append(ValidationError("warning",
+            "No $ARGUMENTS variable found. Commands typically use $ARGUMENTS for user input.",
+            command_path))
 
     return errors
 
@@ -202,12 +240,33 @@ def validate_hooks(hooks_path: Path) -> list[ValidationError]:
         errors.append(ValidationError("warning", "Missing 'hooks' key", hooks_path))
         return errors
 
-    valid_hook_types = ["PreToolUse", "PostToolUse", "Stop"]
+    valid_hook_types = [
+        "PreToolUse", "PostToolUse", "Stop",
+        "UserPromptSubmit", "SessionStart", "SessionEnd",
+        "PermissionRequest", "Notification", "SubagentStart",
+        "PostToolUseFailure", "PreCompact"
+    ]
     for hook_type in hooks["hooks"]:
         if hook_type not in valid_hook_types:
             errors.append(ValidationError("warning",
                 f"Unknown hook type '{hook_type}'. Valid: {valid_hook_types}",
                 hooks_path))
+
+    # Check for absolute paths in hook commands (should use ${CLAUDE_PLUGIN_ROOT})
+    for hook_type, hook_entries in hooks["hooks"].items():
+        if not isinstance(hook_entries, list):
+            continue
+        for entry in hook_entries:
+            hook_list = entry.get("hooks", [])
+            if not isinstance(hook_list, list):
+                continue
+            for hook in hook_list:
+                command = hook.get("command", "")
+                if command.startswith("/") or command.startswith("~"):
+                    errors.append(ValidationError("warning",
+                        f"Absolute path in hook command: '{command}'. "
+                        "Use ${CLAUDE_PLUGIN_ROOT}/... instead for portability.",
+                        hooks_path))
 
     return errors
 
@@ -240,6 +299,15 @@ def validate_plugin(plugin_path: Path) -> list[ValidationError]:
             if skill_dir.is_dir():
                 errors.extend(validate_skill(skill_dir))
 
+    # Validate commands
+    commands_dir = plugin_path / "commands"
+    if commands_dir.exists():
+        for command_file in commands_dir.glob("*.md"):
+            # Skip CLAUDE.md — it's a plugin instruction file, not a command
+            if command_file.name == "CLAUDE.md":
+                continue
+            errors.extend(validate_command(command_file))
+
     # Validate agents
     agents_dir = plugin_path / "agents"
     if agents_dir.exists():
@@ -249,7 +317,18 @@ def validate_plugin(plugin_path: Path) -> list[ValidationError]:
     # Validate hooks
     hooks_dir = plugin_path / "hooks"
     if hooks_dir.exists():
-        for hooks_file in hooks_dir.glob("*.json"):
+        json_files = list(hooks_dir.glob("*.json"))
+        hooks_json = hooks_dir / "hooks.json"
+
+        # Warn if JSON files exist but hooks.json is not among them
+        if json_files and not hooks_json.exists():
+            other_names = [f.name for f in json_files]
+            errors.append(ValidationError("warning",
+                f"Found hook files {other_names} but no hooks.json. "
+                "Runtime only auto-loads hooks/hooks.json.",
+                hooks_dir))
+
+        for hooks_file in json_files:
             errors.extend(validate_hooks(hooks_file))
 
     return errors
