@@ -22,7 +22,7 @@ Claude acts as orchestrator — splitting work, dispatching, polling, and synthe
 |--------|--------|-------|
 | Architecture, backend, systems, DevOps, DB | Codex CLI | gpt-5.3-codex |
 | Frontend, UI/UX, CSS, React, design | Gemini CLI | gemini-3.1-pro |
-| Research, analysis, general | Codex CLI | gpt-5.2 |
+| Research, analysis, general | Codex CLI | gpt-5.2-codex |
 
 ## Orchestration Protocol
 

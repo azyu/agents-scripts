@@ -47,6 +47,12 @@ fi
 orch_require_cmd jq
 orch_require_cmd tmux
 
+# Validate team name — reject special characters that could break tmux
+if [[ ! "$TEAM" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  orch_err "Invalid team name: '$TEAM' (only alphanumeric, hyphen, underscore allowed)"
+  exit 1
+fi
+
 # Check for required CLI binaries based on task worker_types
 CODEX_BIN="${ORC_CODEX_BIN:-codex}"
 GEMINI_BIN="${ORC_GEMINI_BIN:-gemini}"
@@ -143,10 +149,13 @@ for i in $(seq 0 $(( TASK_COUNT - 1 ))); do
     tmux send-keys -t "$TMUX_SESSION" "$ENV_PREFIX; $WORKER_CMD" Enter
     FIRST=false
   else
-    # Split a new pane
-    tmux split-window -t "$TMUX_SESSION" -v
+    # Split a new pane — warn if terminal is too small
+    if ! tmux split-window -t "$TMUX_SESSION" -v 2>/dev/null; then
+      orch_warn "Failed to split tmux pane for $WORKER_NAME (terminal may be too small for $TASK_COUNT panes). Trying new window."
+      tmux new-window -t "$TMUX_SESSION"
+    fi
     tmux send-keys -t "$TMUX_SESSION" "$ENV_PREFIX; $WORKER_CMD" Enter
-    tmux select-layout -t "$TMUX_SESSION" tiled
+    tmux select-layout -t "$TMUX_SESSION" tiled 2>/dev/null || true
   fi
 
   orch_log "Spawned worker: $WORKER_NAME"

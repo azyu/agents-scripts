@@ -48,10 +48,14 @@ INBOX="$WORKER_DIR/inbox.md"
 DONE_FILE="$WORKER_DIR/done.json"
 RAW_FILE="$WORKER_DIR/raw.jsonl"
 PID_FILE="$WORKER_DIR/pid"
+STDERR_FILE="$WORKER_DIR/stderr.log"
 
 TIMEOUT="${ORC_TIMEOUT:-300}"
 CODEX_BIN="${ORC_CODEX_BIN:-codex}"
 GEMINI_BIN="${ORC_GEMINI_BIN:-gemini}"
+
+# Track CLI PID for cleanup
+CLI_PID_FILE="$WORKER_DIR/.cli_pid"
 
 # --- Crash guard ---
 
@@ -71,6 +75,25 @@ write_done() {
 }
 
 cleanup() {
+  # Kill any remaining CLI child processes
+  if [[ -f "$CLI_PID_FILE" ]]; then
+    local cli_pid
+    cli_pid=$(cat "$CLI_PID_FILE" 2>/dev/null) || true
+    if [[ -n "$cli_pid" ]] && kill -0 "$cli_pid" 2>/dev/null; then
+      # Try process group kill first
+      local cli_pgid
+      cli_pgid=$(ps -o pgid= -p "$cli_pid" 2>/dev/null | tr -d ' ') || true
+      local my_pgid
+      my_pgid=$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ') || true
+      if [[ -n "$cli_pgid" && "$cli_pgid" != "$my_pgid" && "$cli_pgid" != "0" ]]; then
+        kill -TERM -- -"$cli_pgid" 2>/dev/null || true
+      else
+        kill -TERM "$cli_pid" 2>/dev/null || true
+      fi
+    fi
+    rm -f "$CLI_PID_FILE"
+  fi
+
   if [[ ! -f "$DONE_FILE" ]]; then
     local elapsed=0
     if [[ -n "${START_TIME:-}" ]]; then
@@ -116,7 +139,7 @@ case "$WORKER_TYPE" in
     CODEX_ARGS+=("$PROMPT")
 
     orch_log "Running: $CODEX_BIN ${CODEX_ARGS[*]:0:4} ..."
-    if orch_timeout_run "$TIMEOUT" "$CODEX_BIN" "${CODEX_ARGS[@]}" > "$RAW_FILE" 2>/dev/null; then
+    if orch_timeout_run "$TIMEOUT" "$CODEX_BIN" "${CODEX_ARGS[@]}" > "$RAW_FILE" 2>"$STDERR_FILE"; then
       CLI_EXIT=0
     else
       CLI_EXIT=$?
@@ -131,7 +154,7 @@ case "$WORKER_TYPE" in
 
     RAW_FILE="$WORKER_DIR/raw.json"
     orch_log "Running: $GEMINI_BIN -p ... --yolo --output-format json"
-    if orch_timeout_run "$TIMEOUT" "$GEMINI_BIN" "${GEMINI_ARGS[@]}" > "$RAW_FILE" 2>/dev/null; then
+    if orch_timeout_run "$TIMEOUT" "$GEMINI_BIN" "${GEMINI_ARGS[@]}" > "$RAW_FILE" 2>"$STDERR_FILE"; then
       CLI_EXIT=0
     else
       CLI_EXIT=$?
@@ -155,8 +178,11 @@ OUTPUT=""
 if [[ $CLI_EXIT -ne 0 ]]; then
   OUTPUT="CLI exited with code $CLI_EXIT"
   if [[ -f "$RAW_FILE" ]]; then
-    # Include last few lines of raw output for debugging
     OUTPUT="$OUTPUT. Raw tail: $(tail -5 "$RAW_FILE" 2>/dev/null || echo '(empty)')"
+  fi
+  # Append stderr if available
+  if [[ -f "$STDERR_FILE" && -s "$STDERR_FILE" ]]; then
+    OUTPUT="$OUTPUT. Stderr: $(tail -20 "$STDERR_FILE" 2>/dev/null || echo '(empty)')"
   fi
   write_done "failed" "$CLI_EXIT" "$OUTPUT" "$DURATION"
   orch_warn "Worker $WORKER failed (exit=$CLI_EXIT, ${DURATION}s)"
@@ -165,20 +191,12 @@ fi
 
 case "$WORKER_TYPE" in
   codex)
-    # Extract last assistant message from JSONL stream
-    OUTPUT=$(grep '"item.completed"' "$RAW_FILE" \
-      | grep '"role":"assistant"' \
+    # Extract last assistant message from JSONL stream using jq stream parsing.
+    # Each line is parsed independently; non-JSON lines are silently skipped.
+    OUTPUT=$(jq -R 'fromjson? | select(.type == "item.completed") | select(.item.role == "assistant") | [.item.content[]?.text // empty] | join("\n")' "$RAW_FILE" \
       | tail -1 \
-      | jq -r '.item.content[0].text // empty' 2>/dev/null \
+      | jq -r '. // empty' 2>/dev/null \
       || true)
-
-    if [[ -z "$OUTPUT" ]]; then
-      # Fallback: try any item.completed with output_text
-      OUTPUT=$(grep '"item.completed"' "$RAW_FILE" \
-        | tail -1 \
-        | jq -r '.item.content[]?.text // empty' 2>/dev/null \
-        || true)
-    fi
 
     if [[ -z "$OUTPUT" ]]; then
       OUTPUT="(could not parse codex output — see raw.jsonl)"
