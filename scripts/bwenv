@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+# bwenv — Bitwarden .env secret manager CLI
+# Usage: bwenv <command> [args]
+set -euo pipefail
+
+readonly FOLDER_NAME="bwenv"
+readonly GREEN='\033[0;32m' YELLOW='\033[0;33m' RED='\033[0;31m' NC='\033[0m'
+
+# ── Helpers ──────────────────────────────────────────────
+
+log()  { printf "${GREEN}[bwenv]${NC} %s\n" "$*" >&2; }
+warn() { printf "${YELLOW}[bwenv]${NC} %s\n" "$*" >&2; }
+err()  { printf "${RED}[bwenv]${NC} %s\n" "$*" >&2; exit 1; }
+
+ensure_deps() {
+  command -v bw &>/dev/null || err "bw CLI not found. Install: brew install bitwarden-cli"
+  command -v jq &>/dev/null || err "jq not found. Install: brew install jq"
+}
+
+ensure_unlocked() {
+  local state
+  state="$(bw status 2>/dev/null | jq -r '.status')"
+
+  case "$state" in
+    unauthenticated) err "Not logged in. Run 'bw login' first." ;;
+    locked)
+      warn "Vault locked. Unlocking..."
+      BW_SESSION="$(bw unlock --raw)" || err "Unlock failed"
+      export BW_SESSION
+      ;;
+    unlocked) ;;
+    *) err "Unknown bw status: '$state'" ;;
+  esac
+}
+
+# Get or create the bwenv folder; sets FOLDER_ID
+ensure_folder() {
+  FOLDER_ID="$(bw list folders 2>/dev/null \
+    | jq -r --arg name "$FOLDER_NAME" '.[] | select(.name == $name) | .id')"
+
+  if [[ -z "$FOLDER_ID" ]]; then
+    log "Creating folder: $FOLDER_NAME"
+    FOLDER_ID="$(echo "{\"name\":\"$FOLDER_NAME\"}" | bw encode | bw create folder | jq -r '.id')"
+  fi
+}
+
+# Get item ID by name within bwenv folder; returns empty if not found
+get_item_id() {
+  local name="$1"
+  bw list items --folderid "$FOLDER_ID" --search "$name" 2>/dev/null \
+    | jq -r --arg n "$name" '.[] | select(.type == 2 and .name == $n) | .id' \
+    | head -1
+}
+
+# Get notes by item name within bwenv folder
+get_notes() {
+  local name="$1"
+  local item_id
+  item_id="$(get_item_id "$name")"
+  [[ -n "$item_id" ]] || err "Item not found: $name"
+
+  bw get item "$item_id" 2>/dev/null | jq -r '.notes // empty'
+}
+
+# ── Commands ─────────────────────────────────────────────
+
+cmd_save() {
+  local name="${1:?Usage: bwenv save <name> [path]}"
+  local env_path="${2:-./.env}"
+
+  [[ -f "$env_path" ]] || err "File not found: $env_path"
+
+  local content
+  content="$(cat "$env_path")"
+  local item_id
+  item_id="$(get_item_id "$name")"
+
+  if [[ -n "$item_id" ]]; then
+    local encoded
+    encoded="$(bw get item "$item_id" | jq --arg notes "$content" '.notes = $notes' | bw encode)"
+    bw edit item "$item_id" "$encoded" >/dev/null
+    log "Updated: $name"
+  else
+    local template
+    template="$(jq -n \
+      --arg name "$name" \
+      --arg notes "$content" \
+      --arg fid "$FOLDER_ID" \
+      '{type: 2, secureNote: {type: 0}, name: $name, notes: $notes, folderId: $fid}' | bw encode)"
+    bw create item "$template" >/dev/null
+    log "Created: $name (folder: $FOLDER_NAME)"
+  fi
+
+  bw sync >/dev/null 2>&1 || true
+}
+
+cmd_load() {
+  local name="${1:?Usage: bwenv load <name>}"
+
+  local notes
+  notes="$(get_notes "$name")"
+  [[ -n "$notes" ]] || err "Empty notes in: $name"
+
+  local count=0
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" =~ ^# ]] && continue
+    local key="${line%%=*}"
+    local value="${line#*=}"
+    if [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ && -n "$value" ]]; then
+      printf 'export %s=%q\n' "$key" "$value"
+      count=$((count + 1))
+    fi
+  done <<< "$notes"
+
+  log "Ready to export $count vars from: $name (use: source <(bwenv load $name))"
+}
+
+cmd_export() {
+  local name="${1:?Usage: bwenv export <name>}"
+
+  local notes
+  notes="$(get_notes "$name")"
+  [[ -n "$notes" ]] || err "Empty notes in: $name"
+
+  printf '%s\n' "$notes"
+}
+
+cmd_list() {
+  local items
+  items="$(bw list items --folderid "$FOLDER_ID" 2>/dev/null)" || err "Failed to list items"
+
+  local filtered
+  filtered="$(echo "$items" | jq -r \
+    '[.[] | select(.type == 2)]
+     | sort_by(.revisionDate) | reverse
+     | .[] | "\(.name)\t\(.revisionDate | split("T")[0])"')"
+
+  if [[ -z "$filtered" ]]; then
+    warn "No bwenv items found."
+    return 0
+  fi
+
+  printf "%-30s %s\n" "NAME" "UPDATED"
+  printf "%-30s %s\n" "----" "-------"
+  while IFS=$'\t' read -r n d; do
+    printf "%-30s %s\n" "$n" "$d"
+  done <<< "$filtered"
+}
+
+cmd_diff() {
+  local name="${1:?Usage: bwenv diff <name> [path]}"
+  local env_path="${2:-./.env}"
+
+  [[ -f "$env_path" ]] || err "File not found: $env_path"
+
+  local notes
+  notes="$(get_notes "$name")"
+
+  local result
+  if result="$(diff --color=auto <(printf '%s\n' "$notes") "$env_path")"; then
+    log "No differences."
+  else
+    warn "Differences found (< Bitwarden, > local):"
+    echo "$result" >&2
+    return 1
+  fi
+}
+
+cmd_delete() {
+  local name="${1:?Usage: bwenv delete <name>}"
+
+  local item_id
+  item_id="$(get_item_id "$name")"
+  [[ -n "$item_id" ]] || err "Item not found: $name"
+
+  bw delete item "$item_id" >/dev/null
+  bw sync >/dev/null 2>&1 || true
+  log "Deleted: $name"
+}
+
+# ── Main ─────────────────────────────────────────────────
+
+usage() {
+  cat >&2 <<'EOF'
+bwenv — Bitwarden .env secret manager
+
+Usage: bwenv <command> [args]
+
+Commands:
+  save   <name> [path]   Save .env to Bitwarden Secure Note (default: ./.env)
+  load   <name>          Output export statements (use: source <(bwenv load <name>))
+  export <name>          Output raw .env content to stdout
+  list                   List all bwenv items
+  diff   <name> [path]   Compare local .env with Bitwarden
+  delete <name>          Delete item from Bitwarden
+
+Items are stored in the "bwenv" folder in Bitwarden.
+EOF
+  exit 1
+}
+
+main() {
+  ensure_deps
+
+  local cmd="${1:-}"
+  shift || true
+
+  case "$cmd" in
+    save|load|export|list|diff|delete)
+      ensure_unlocked
+      ensure_folder
+      ;;&
+    save)   cmd_save "$@" ;;
+    load)   cmd_load "$@" ;;
+    export) cmd_export "$@" ;;
+    list)   cmd_list ;;
+    diff)   cmd_diff "$@" ;;
+    delete) cmd_delete "$@" ;;
+    help|-h|--help) usage ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"
