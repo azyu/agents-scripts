@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__codex__codex",
+      "Bash(chmod +x:*)",
+      "Bash(bash:*)",
+      "Bash(shellcheck:*)"
+    ]
+  }
+}
