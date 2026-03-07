@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust CLI"
+  short_description: "Build clap-based Rust CLIs with Cargo"
+  default_prompt: "Use $rust-cli to create or refactor a clap-based Rust CLI in this workspace."

@@ -1,0 +1,105 @@
+{
+  "version": 3,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "installedAt": "2026-03-03T16:51:55.265Z",
+      "updatedAt": "2026-03-03T16:51:55.265Z"
+    },
+    "golang-architect": {
+      "source": "tomlord1122/tomtom-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tomlord1122/tomtom-skill.git",
+      "skillPath": "skills/golang-architect/SKILL.md",
+      "skillFolderHash": "377852829f176de9d0aca35598d6f808761b82fd",
+      "installedAt": "2026-03-05T09:01:05.902Z",
+      "updatedAt": "2026-03-05T09:01:05.902Z"
+    },
+    "golang-cli-cobra-viper": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/bobmatnyc/claude-mpm-skills.git",
+      "skillPath": "toolchains/golang/cli/SKILL.md",
+      "skillFolderHash": "ad74a8a55e553da69103f7c007995df664cf38b1",
+      "installedAt": "2026-03-05T09:01:09.195Z",
+      "updatedAt": "2026-03-05T09:01:09.195Z"
+    },
+    "go-testing-code-review": {
+      "source": "existential-birds/beagle",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/existential-birds/beagle.git",
+      "skillPath": "plugins/beagle-go/skills/go-testing-code-review/SKILL.md",
+      "skillFolderHash": "a0461557562c42f2555f1991bb9b70f6e56ea1d0",
+      "installedAt": "2026-03-05T09:01:12.170Z",
+      "updatedAt": "2026-03-05T09:01:12.170Z"
+    },
+    "api-design": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/supercent-io/skills-template.git",
+      "skillPath": ".agent-skills/api-design/SKILL.md",
+      "skillFolderHash": "12cfbea28f187b228d249119f7f198d2fed0e684",
+      "installedAt": "2026-03-05T09:01:14.910Z",
+      "updatedAt": "2026-03-05T09:01:14.910Z"
+    },
+    "api-security-hardening": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/secondsky/claude-skills.git",
+      "skillPath": "plugins/api-security-hardening/skills/api-security-hardening/SKILL.md",
+      "skillFolderHash": "659e87ef1903d46d1cff81bc851fb2bd79ed5551",
+      "installedAt": "2026-03-05T09:01:19.051Z",
+      "updatedAt": "2026-03-05T09:01:19.051Z"
+    },
+    "conventional-commit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/conventional-commit/SKILL.md",
+      "skillFolderHash": "2dd6528ab4c12198e4805ea62739f7c51d0dd51d",
+      "installedAt": "2026-03-05T09:01:22.965Z",
+      "updatedAt": "2026-03-05T09:01:22.965Z"
+    },
+    "domain-cli": {
+      "source": "zhanghandong/rust-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zhanghandong/rust-skills.git",
+      "skillPath": "skills/domain-cli/SKILL.md",
+      "skillFolderHash": "a021a48d16804de5aa043454c4daecd8e28d758c",
+      "installedAt": "2026-03-06T06:41:38.196Z",
+      "updatedAt": "2026-03-06T06:41:38.196Z"
+    },
+    "ratatui-tui": {
+      "source": "blacktop/dotfiles",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/blacktop/dotfiles.git",
+      "skillPath": "ai/skills/ratatui-tui/SKILL.md",
+      "skillFolderHash": "fa5f9fe4ca1869e79fac4e23b4b19317d0178afe",
+      "installedAt": "2026-03-06T06:41:55.077Z",
+      "updatedAt": "2026-03-06T06:41:55.077Z"
+    },
+    "rust-testing": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/pproenca/dot-skills.git",
+      "skillPath": "skills/.experimental/rust-testing/SKILL.md",
+      "skillFolderHash": "bf1d15ba326adb69b7105a710cbe6b5db7e93a28",
+      "installedAt": "2026-03-06T06:42:04.599Z",
+      "updatedAt": "2026-03-06T06:42:04.599Z"
+    },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/github/awesome-copilot.git",
+      "skillPath": "skills/create-readme/SKILL.md",
+      "skillFolderHash": "f65537a3461b663121fe195697979c17a8004ea5",
+      "installedAt": "2026-03-07T11:57:58.612Z",
+      "updatedAt": "2026-03-07T11:57:58.612Z"
+    }
+  },
+  "dismissed": {}
+}

@@ -5,26 +5,31 @@ AI 코딩 에이전트를 위한 agents & skills 컬렉션. Claude Code, OpenCod
 ## 구조
 
 ```
+.skill-lock.json         # 외부 source로 설치한 skills 메타데이터
+.claude/settings.local.json # Claude Code 로컬 설정
 install.sh               # ~/.claude symlink 설치 스크립트
-AGENTS.md               # 에이전트 진입점 — rules/ 참조
+AGENTS.md                # 에이전트 진입점 — rules/ 참조
 rules/                   # 공통 가이드라인 (모든 에이전트 적용)
 ├── karpathy-guidelines.md
 ├── custom-guidelines.md
 └── tools.md
 agents/                  # 서브에이전트 정의 (11개)
-skills/                  # 스킬 패키지 (12개)
+skills/                  # 스킬 패키지, 참조 문서, 보조 메타데이터
+├── AGENTS.md
 ├── agents-md-creator/
+├── api-design/
+├── api-security-hardening/
+├── conventional-commit/
+├── domain-cli/
 ├── frontend-design/
+├── golang-architect/
 ├── last30days/
 ├── orchestrate/         # tmux CLI 워커 오케스트레이션
-├── plugins-creator/
-├── security-review/
-├── skill-creator/
-├── tdd-workflow/
-├── backend-patterns.md
-├── clickhouse-io.md
-├── coding-standards.md
-└── frontend-patterns.md
+├── ratatui-tui/
+├── rust-cli/
+├── rust-testing/
+├── shell-script/
+└── ...                  # 현재 top-level 엔트리 29개
 scripts/                 # 실행 스크립트
 ├── orchestrate-lib.sh   # 공통 함수 (로깅, JSON, 타임아웃)
 ├── orchestrate-worker.sh # 워커 래퍼 (CLI 실행 → done.json)
@@ -64,24 +69,18 @@ scripts/                 # 실행 스크립트
 
 ## Skills
 
-에이전트에 로드하여 전문 지식을 부여하는 스킬 패키지.
+에이전트에 로드하여 전문 지식을 부여하는 스킬 패키지와 참조 문서. 현재 `skills/` top-level 엔트리는 29개이며, 외부 source에서 가져온 스킬의 provenance는 `.skill-lock.json`에 기록된다.
 
-| Skill | 타입 | 설명 |
-|-------|------|------|
-| `agents-md-creator` | 디렉토리 | AGENTS.md 생성/업데이트 — 10+ 탑 레포 분석 기반 |
-| `frontend-design` | 디렉토리 | 프로덕션급 프론트엔드 UI 생성 |
-| `last30days` | 디렉토리 | 최근 30일 Reddit+X+Web 리서치 → 프롬프트 생성 |
-| `plugins-creator` | 디렉토리 | Claude Code 플러그인 생성 가이드 |
-| `security-review` | 디렉토리 | 인증, 입력 처리, 시크릿, API 보안 체크리스트 |
-| `skill-creator` | 디렉토리 | 새 스킬 생성/패키징 가이드 |
-| `tdd-workflow` | 디렉토리 | TDD 워크플로우 (Jest/Vitest/Playwright 패턴) |
-| `orchestrate` | 디렉토리 | Codex/Gemini CLI tmux 워커 오케스트레이션 |
-| `coding-standards` | 단일 파일 | TypeScript/JavaScript/React/Node.js 코딩 표준 |
-| `frontend-patterns` | 단일 파일 | React, Next.js, 상태 관리, 성능 최적화 패턴 |
-| `backend-patterns` | 단일 파일 | Node.js/Express/Next.js API 설계, DB 최적화 |
-| `clickhouse-io` | 단일 파일 | ClickHouse 쿼리 최적화, 분석 데이터 엔지니어링 |
+| Group | Entries |
+|-------|---------|
+| Core repo skills | `agents-md-creator`, `frontend-design`, `last30days`, `orchestrate`, `plugins-creator`, `security-review`, `skill-creator`, `tdd-workflow` |
+| Imported engineering skills | `api-design`, `api-security-hardening`, `conventional-commit`, `domain-cli`, `find-skills`, `go-testing-code-review`, `golang-architect`, `golang-cli-cobra-viper`, `project-setup`, `ratatui-tui`, `rust-cli`, `rust-cli-kis-style`, `rust-testing`, `shell-script` |
+| Utility skills | `bwenv`, `create-readme` |
+| Reference docs | `backend-patterns.md`, `clickhouse-io.md`, `coding-standards.md`, `frontend-patterns.md` |
 
 ## 설치
+
+### 신규 설치
 
 ```bash
 git clone git@github.com:azyu/agents-scripts.git ~/.agents
@@ -99,6 +98,23 @@ git clone git@github.com:azyu/agents-scripts.git ~/.agents
 | `~/.agents/scripts/` | `~/.claude/scripts/` |
 
 기존 파일은 `~/.claude/backups/`에 자동 백업됩니다.
+
+### 기존 `~/.agents`를 백업 후 병합
+
+기존 로컬 스킬이나 설정을 유지하면서 저장소로 전환하려면 아래 순서로 교체한다. 같은 경로 충돌 시 새 저장소 버전을 유지하고, 기존 디렉토리에만 있던 파일만 새 `~/.agents`로 복사한다.
+
+```bash
+ts=$(date +%Y%m%d-%H%M%S)
+tmp="$HOME/.agents.clone-$ts"
+backup="$HOME/.agents.backup-$ts"
+
+git clone --depth 1 git@github.com:azyu/agents-scripts.git "$tmp"
+mv "$HOME/.agents" "$backup"
+mv "$tmp" "$HOME/.agents"
+rsync -a --ignore-existing "$backup"/ "$HOME/.agents"/
+```
+
+병합 후 upstream에 없던 로컬 스킬과 `.skill-lock.json`은 `git status`에서 추가 파일로 보일 수 있다. 저장소에 포함하려면 `git add` 후 커밋한다.
 
 ## Scripts
 

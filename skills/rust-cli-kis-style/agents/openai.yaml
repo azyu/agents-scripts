@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust CLI KIS Style"
+  short_description: "Apply kis-cli's Rust CLI repo conventions"
+  default_prompt: "Use $rust-cli-kis-style to extend this Rust CLI with the same patterns used in kis-cli."
