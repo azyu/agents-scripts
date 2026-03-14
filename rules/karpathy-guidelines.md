@@ -10,45 +10,47 @@ license: MIT
 
 ## 1. Think Before Coding
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+**MUST distinguish observed facts, assumptions, and open questions. MUST surface uncertainty explicitly. SHOULD surface tradeoffs.**
 
 Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+- MUST distinguish observed facts, assumptions, and open questions in separate bullets.
+- If information is uncertain, MUST state what is uncertain and ask for the missing detail.
+- If multiple interpretations exist, MUST present the alternatives and state which one you recommend.
+- If a simpler approach exists, SHOULD propose it and explain why it is sufficient.
+- If something remains unclear, MUST stop, name the ambiguity, and ask one clarifying question.
 
 ## 2. Simplicity First
 
-**Minimum code that solves the problem. Nothing speculative.**
+**MUST write the minimum code that solves the problem. SHOULD prefer concrete solutions over speculative flexibility.**
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+- MUST implement only the requested features.
+- MUST use direct, single-purpose code when the solution is single-use.
+- If "flexibility" or "configurability" is not requested, SHOULD choose the simplest concrete behavior that satisfies the current requirement.
+- SHOULD add error handling only for realistic scenarios you can name.
+- If a 50-line solution solves the same problem as a 200-line solution, MUST use the 50-line solution.
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
 ## 3. Surgical Changes
 
-**Touch only what you must. Clean up only your own mess.**
+**MUST touch only what is necessary. MUST clean up only your own mess.**
 
 When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+- MUST keep edits scoped to the lines required by the task.
+- MUST leave adjacent code, comments, and formatting unchanged unless the task requires changes.
+- MUST leave working code unrefactored unless the task requires it.
+- MUST match the existing style, even if you would choose a different style.
+- SHOULD mention unrelated dead code and leave it unchanged.
 
 When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+- MUST remove imports, variables, and functions that YOUR changes made unused.
+- SHOULD leave pre-existing dead code unchanged unless removal is requested.
 
 The test: Every changed line should trace directly to the user's request.
 
 ## 4. Goal-Driven Execution
 
-**Define success criteria. Loop until verified.**
+**MUST define success criteria before coding. MUST verify each step before declaring success.**
 
 Transform tasks into verifiable goals:
 - "Add validation" → "Write tests for invalid inputs, then make them pass"

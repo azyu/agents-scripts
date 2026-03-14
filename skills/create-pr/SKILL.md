@@ -1,7 +1,7 @@
 ---
 name: create-pr
 description: 'Git diff 분석 기반 고품질 PR 생성. What/Why/How 구조. PR 템플릿 자동 감지 적응.'
-allowed-tools: Bash(git *), Bash(gh pr create*)
+allowed-tools: Bash(git *), Bash(gh pr create*), Bash(gh api *)
 ---
 
 ## Workflow
@@ -83,7 +83,19 @@ Step 3에서 감지한 템플릿의 각 섹션을 diff 분석 결과로 채움. 
 - Test Plan: 변경된 파일/기능 기반으로 테스트 항목 추론. 테스트 코드가 포함되어 있으면 해당 내용 반영
 - Related Issues: 커밋 메시지에서 `#숫자`, `closes`, `fixes`, `resolves` 패턴 자동 추출
 
-### Step 6: PR 생성
+### Step 6: Auto-delete branch 설정 확인
+
+```bash
+gh api repos/{owner}/{repo} --jq '.delete_branch_on_merge'
+```
+
+- `false`면 → 자동 활성화:
+  ```bash
+  gh api repos/{owner}/{repo} --method PATCH -f delete_branch_on_merge=true
+  ```
+- 머지 후 head branch가 자동 삭제되므로 수동 정리 불필요
+
+### Step 7: PR 생성
 
 remote에 push 후 PR 생성:
 
@@ -101,7 +113,7 @@ EOF
 - push 실패 시 원인 분석 후 사용자에게 안내
 - `gh` CLI 미설치 시 설치 안내
 
-### Step 7: 결과 출력
+### Step 8: 결과 출력
 
 - PR URL 반환
 - 주요 변경 요약 (1-2줄)

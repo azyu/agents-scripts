@@ -4,7 +4,25 @@
       "mcp__codex__codex",
       "Bash(chmod +x:*)",
       "Bash(bash:*)",
-      "Bash(shellcheck:*)"
+      "Bash(shellcheck:*)",
+      "Bash(gemini --version 2>&1 || echo \"gemini command not found\")",
+      "Bash(gemini --help 2>&1 || echo \"gemini command not available\")",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:geminicli.com)",
+      "Bash(gemini --list-extensions 2>&1 | head -50)",
+      "Bash(gemini mcp:*)",
+      "Bash(gemini extensions:*)",
+      "Bash(gemini -p \"Search for: latest Node.js version\" 2>&1 | head -50)",
+      "Bash(echo \"What's the latest React version?\" | gemini -p 2>&1 | head -40)",
+      "Bash(gemini -p \"Search: current Python version\" -o json 2>&1 | head -100)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(gh api:*)",
+      "Bash(gh search:*)",
+      "Bash(gemini -p \"What is the current LTS version of Node.js?\" --output-format json 2>&1 | head -50)",
+      "Bash(gemini -p \"Use google_web_search to find: Ubuntu 26 LTS release date. Provide a comprehensive summary with source URLs.\" --output-format json 2>/dev/null | jq -r '.response')",
+      "Bash(gemini -p \"Use google_web_search to find: Debian 14 release date schedule. Provide a comprehensive summary with source URLs.\" --output-format json 2>/dev/null | jq -r '.response')",
+      "Bash(gemini --help 2>&1 | grep -i model)",
+      "Bash(gemini -m gemini-2.0-flash -p \"Use google_web_search to find: latest Go version 2026\" --output-format json 2>/dev/null | jq -r '.response')"
     ]
   }
 }
