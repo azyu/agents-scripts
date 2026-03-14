@@ -29,6 +29,8 @@ Before writing anything, gather context by exploring:
 6. **Monorepo detection** — Check for workspaces, multiple packages, nested build systems
 7. **Test framework** — Identify testing stack and patterns used
 
+If a required fact cannot be verified from the repo, state what is missing and omit or defer that section instead of inventing project details.
+
 ### Phase 2: Generate AGENTS.md
 
 Use the **Section Priority Table** to decide what to include. Start with Tier 1 (mandatory), add Tier 2 (recommended), include Tier 3 only when relevant.
@@ -87,10 +89,10 @@ The generated AGENTS.md must follow this structure (omit sections not applicable
 [exact commands: dev, build, test, lint — file-scoped first]
 
 ## Code Standards
-### Do
+### Preferred Patterns
 [concrete rules with library versions, patterns]
-### Don't
-[explicit prohibitions]
+### Avoid Patterns
+[explicit anti-patterns with fallback or corrective action when relevant]
 
 ## After Code Changes
 [mandatory verification steps in order]
@@ -119,6 +121,7 @@ Before delivering, verify:
 - [ ] No generic advice — every line is project-specific
 - [ ] Under 300 lines (split into nested AGENTS.md for monorepos if needed)
 - [ ] Includes file-scoped commands where possible
+- [ ] Missing facts are called out explicitly instead of guessed
 
 ## References
 

@@ -15,6 +15,8 @@ Before starting, ensure:
 - Git is initialized (`git init` if needed)
 - Use `main` as the default Git branch (`git init -b main` for new repos, or `git branch -M main` after init if needed)
 
+If the project concept or stack is still missing, stop and gather that information before creating files.
+
 ## Step 1: Document Research
 
 Compile everything discussed in the conversation into a structured reference document.
@@ -25,6 +27,8 @@ Compile everything discussed in the conversation into a structured reference doc
 2. Write `docs/references.md` using the template from `references/templates.md`
 3. Populate all sections from conversation context: concept, tech stack rationale, architecture decisions, external references, and open questions
 4. Include prior art, competitor analysis, or benchmarks if discussed
+
+If the prior conversation does not contain enough detail to fill a section accurately, mark that section as an open question instead of inventing content.
 
 ### Output
 - `docs/references.md`
@@ -47,6 +51,8 @@ Generate a production-quality AGENTS.md tailored to the project, then symlink CL
    - Secrets and environment safety
 4. Create symlink: `ln -sf AGENTS.md CLAUDE.md`
 5. Quality check — every command copy-pasteable, file paths reference real files, no generic advice
+
+If `docs/references.md` is missing, stop and complete Step 1 first.
 
 ### Output
 - `AGENTS.md`
@@ -72,11 +78,12 @@ Set up shared coordination files so multiple agents can track progress and stay 
 4. Append **Multi-Agent Coordination** section to `AGENTS.md` — use template from `references/templates.md`
    - Rule: read `.context/TASKS.md` and `.context/STEERING.md` before starting any task
    - Rule: update TASKS.md on task start (`[~]`) and completion (`[x]`)
-5. Commit on success:
+5. If the repo is under git and the user asked for a commit, commit on success:
    ```bash
    git add .context/TASKS.md .context/STEERING.md AGENTS.md
    git commit -m "chore: set up multi-agent coordination (.context/)"
    ```
+6. Otherwise, report the created files and leave the working tree uncommitted.
 
 ### Output
 - `.context/TASKS.md`

@@ -41,7 +41,11 @@ When a user asks for help with something, identify:
 2. The specific task (e.g., writing tests, creating animations, reviewing PRs)
 3. Whether this is a common enough task that a skill likely exists
 
-### Step 2: Search for Skills
+### Step 2: Check Local Skills First
+
+If the current workspace already contains relevant local skills, present those before searching the external ecosystem.
+
+### Step 3: Search for Skills
 
 Run the find command with a relevant query:
 
@@ -64,7 +68,9 @@ vercel-labs/agent-skills@vercel-react-best-practices
 └ https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices
 ```
 
-### Step 3: Present Options to the User
+If the CLI is unavailable, report that briefly and provide the exact search command the user can run later.
+
+### Step 4: Present Options to the User
 
 When you find relevant skills, present them to the user with:
 
@@ -84,7 +90,7 @@ npx skills add vercel-labs/agent-skills@vercel-react-best-practices
 Learn more: https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices
 ```
 
-### Step 4: Offer to Install
+### Step 5: Offer to Install
 
 If the user wants to proceed, you can install the skill for them:
 
@@ -121,6 +127,7 @@ If no relevant skills exist:
 1. Acknowledge that no existing skill was found
 2. Offer to help with the task directly using your general capabilities
 3. Suggest the user could create their own skill with `npx skills init`
+4. Mention the closest local skill if one partially overlaps, and state the gap explicitly
 
 Example:
 

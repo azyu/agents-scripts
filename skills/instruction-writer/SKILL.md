@@ -24,6 +24,7 @@ Use this skill for:
 ### 1. Inspect the target document first
 
 - If a target document exists, read the actual file before proposing rewrites
+- If multiple documents govern the behavior, read the highest-level governing document and the target document before rewriting
 - If no target document exists, extract the intended goals, operating boundaries, and fallback behavior before drafting
 - Identify repeated patterns such as `don't`, `do not`, `never`, `no`, `nothing`, or vague warnings like "avoid hallucination"
 - Separate three cases:
@@ -42,6 +43,7 @@ Good instruction rules specify:
 - the trigger or condition
 - the required behavior
 - the fallback when the requirement cannot be satisfied
+- the observable output or check when the rule is important enough to verify
 - When rewriting a prohibition, prefer a target behavior plus fallback over a bare prohibition
 
 Examples:
@@ -91,6 +93,13 @@ Replace weak examples like:
 - When rewriting, change only the lines required to achieve the requested rewrite
 - When drafting, include only the sections needed for the requested instruction scope
 - If adjacent text is already aligned with the new style, leave it alone
+
+## Deliverable Format
+
+Unless the user asks for a full-file rewrite only, deliver:
+- a short diagnosis of the main instruction problems
+- the rewritten text or patch
+- any remaining hard prohibitions with a one-line justification for each
 
 ## Validation Checklist
 
